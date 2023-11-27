@@ -4,11 +4,14 @@ from tkinter import *
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numberByDate
+import chooseFolder
+import shutil
 
 #dialog wybór folderu
-root = Tk()
-root.withdraw()
-folder_selected = filedialog.askdirectory()
+#root = Tk()
+#root.withdraw()
+chooseFolder.autoFind()
+folder_selected = "data"#filedialog.askdirectory()
 
 #sortowanie i przypisanie nadawcy
 data = list()
@@ -20,6 +23,8 @@ for i in os.listdir(folder_selected):
     for i in a:
         pppp = i.split(',')
         data.append((pppp[1][29:-1], pppp[2][23::]))
+
+shutil.rmtree("data")
 data = sorted(data, key=lambda x: int(x[1]))
 
 

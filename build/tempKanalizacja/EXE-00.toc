@@ -62,7 +62,7 @@
  [],
  False,
  False,
- 1701108515,
+ 1701114589,
  [('run',
    '/home/sebch/.local/lib/python3.10/site-packages/PyInstaller/bootloader/Linux-64bit-intel/run',
    'EXECUTABLE')],
