@@ -1,6 +1,9 @@
 import os
 from tkinter import filedialog
 from tkinter import *
+import time
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 
 
@@ -55,14 +58,36 @@ def partDataFromDwnld(folder):
 
 def fullDataFromDwnld(mainfolder):
     finalList = []
-    finalSett = set()
     for subFolder in os.listdir(mainfolder):
         importedData = partDataFromDwnld(mainfolder + '/' + subFolder)
         finalList.extend(importedData)
-    for i in range(len(set(finalList))):
-        print(i)
-    return finalSett, finalList
+    for i in range(len(finalList)):
+        lTime = time.localtime(finalList[i][1])
+        lTime = (lTime[0],lTime[1],lTime[2],lTime[3],lTime[4],lTime[5],lTime[6])
+        finalList[i] = list((finalList[i][0], lTime))
+    finalList = sorted(finalList, key=lambda x: (x[1][0], x[1][1], x[1][2], x[1][3], x[1][4], x[1][5]))
+
+    return simplePlotShow(finalList)
+
+
+
+
+def simplePlotShow(masnyBen):
+    for i in range(len(masnyBen)):
+        masnyBen[i] = (masnyBen[i][1][2], masnyBen[i][1][1], masnyBen[i][1][0])
+    masnySet = sorted(set(masnyBen), key=lambda x: (x[2], x[1], x[0]))
+    x,y=[],[]
+    for i in masnySet:
+        dateEm = "/".join([str(v) for v in i])
+        x.append(dateEm)
+        y.append(masnyBen.count(i))
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%Y'))
+    plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=10))
+    plt.plot(x, y)
+    plt.gcf().autofmt_xdate()
+    plt.show()
+    return x
 
 root = Tk()
 root.withdraw()
-(fullDataFromDwnld(filedialog.askdirectory()))
+print(fullDataFromDwnld(filedialog.askdirectory()))
