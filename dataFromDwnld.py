@@ -9,13 +9,13 @@ from math import ceil
 
 def listMsgs(file):
     f = open(file, "r", encoding="raw-unicode-escape")
-    allMsgs=f.read().split('"is_geoblocked_for_viewer"')[1:-1] #jakiś chujowy podział
+    allMsgs=f.read().split('"type":')[1:-1] #jakiś chujowy podział
     f.close()
     outputList = []
     for i in allMsgs:
         msgInfo = i.split(',') #rozbicie informacji o msg
-        sndrTm =(msgInfo[1][29:-1], msgInfo[2][23::]) #wziąć tylko nadawce i godzine
-        pentak = sndrTm[0].encode('latin-1').decode('utf-8') #jakaś chujowa konwersja
+        sndrTm =(msgInfo[5][16:-1],msgInfo[-2][20::]) #wziąć tylko godzine i nadawce
+        pentak = sndrTm[0]#.encode('latin-1').decode('utf-8') #jakaś chujowa konwersja
         outputList.append((pentak, int(sndrTm[1])/1000))
     return outputList
 
@@ -30,7 +30,8 @@ def partDataFromDwnld(folder):
     msgList = []
     if men.find("facebook")+1:
 
-        folder = ''.join([folder, '/your_activity_across_facebook/messages/inbox/'])
+        folder = ''.join([folder, '/messages/inbox/'])
+        #print(folder)
             
         #wejście w inbox
         for i in os.listdir(folder):
@@ -58,7 +59,7 @@ def partDataFromDwnld(folder):
 
 
 def intervalCalc(masnySet):    #liczenie interwału w wykresie
-    fDay = (int(masnySet[0 ][0]), int(masnySet[0 ][1]), int(masnySet[0 ][2])) #krotka dzień pierwszy
+    fDay = (int(masnySet[0][0]), int(masnySet[0][1]), int(masnySet[0][2])) #krotka dzień pierwszy
     lDay = (int(masnySet[-1][0]), int(masnySet[-1][1]), int(masnySet[-1][2]))
     fDay = time.mktime(dt.datetime(fDay[2], fDay[1], fDay[0]).timetuple()) #dzień pierwszy epoch
     lDay = time.mktime(dt.datetime(lDay[2], lDay[1], lDay[0]).timetuple())
