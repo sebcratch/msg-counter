@@ -1,47 +1,23 @@
-import os
-from tkinter import filedialog
-from tkinter import *
-import time
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from datetime import datetime
-from math import ceil
-import numpy as np
+import json
 
+# Define the list of keys you want to keep
+keys_to_keep = ['senderName', 'text', 'timestamp', 'type']
 
+# Function to filter the message
+def filter_message(message):
+    return {key: message[key] for key in message.keys() if key in keys_to_keep}
 
-# importing library
-import matplotlib.pyplot as plt
- 
-# function to add value labels
-def addlabels(x,y):
-    for i in range(len(x)):
-        plt.text(i, y[i], y[i], ha = 'center')
- 
-if __name__ == '__main__':
-   
-    # creating data on which bar chart will be plot
-    x = ["Engineering", "Hotel Management",
-         "MBA", "Mass Communication", "BBA",
-         "BSc", "MSc"]
-    y = [9330, 4050, 3030, 5500,
-         8040, 4560, 6650]
-     
-    # setting figure size by using figure() function 
-    plt.figure(figsize = (10, 5))
-     
-    # making the bar chart on the data
-    plt.bar(x, y)
-     
-    # calling the function to add value labels
-    addlabels(x, y)
-     
-    # giving title to the plot
-    plt.title("College Admission")
-     
-    # giving X and Y labels
-    plt.xlabel("Courses")
-    plt.ylabel("Number of Admissions")
-     
-    # visualizing the plot
-    plt.show()
+# Load the JSON data
+def load_and_filter_json(json_file):
+    with open(json_file, 'r', encoding="utf-8") as f:
+        data = json.load(f)
+    
+    # Assuming data is a list of messages
+    filtered_data = [filter_message(msg) for msg in data['messages']]
+    
+    return filtered_data
+
+# Example usage
+filtered_messages = load_and_filter_json('C:/Users/S/Downloads/messages/Zuzanna Dębowska_4.json')
+for msg in filtered_messages:
+    print(msg)
