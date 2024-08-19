@@ -11,6 +11,21 @@ def filter_message(message):
     return {key: message[key] for key in message.keys() if key in keys_to_keep}
 
 
+def get_first_and_last_date_of_list(messages):
+    messages = sorted(messages, key=lambda x: x["timestamp"])
+    return (messages[0]['date'], messages[-1]['date'])
+    
+
+
+def datetime_range(days):
+    span = days[1] - days[0]
+    for i in range(span.days + 1):
+        yield days[0] + datetime.timedelta(days=i)
+    
+
+
+
+
 def load_and_filter_json(json_file):
     with open(json_file, 'r', encoding="utf-8") as f:
         data = json.load(f)
@@ -27,7 +42,10 @@ def load_and_filter_json(json_file):
         message["date"] = datetime.datetime(int(message_time.tm_year), int(message_time.tm_mon), int(message_time.tm_mday))        
         message["messageLength"] = len(message["text"])                                                                               
         participants_message_lists[participants.index(message['senderName'])].append(message) 
-    return (participants_message_lists, participants)
+
+    analyzed_span = get_first_and_last_date_of_list(filtered_data)
+
+    return (participants_message_lists, participants, analyzed_span)
 
 
 
@@ -35,13 +53,14 @@ def load_and_filter_json(json_file):
 def dailyPlot(dtldMsgsAndPartcpnts):
 
     participantMessagesLists, participants = dtldMsgsAndPartcpnts[0], dtldMsgsAndPartcpnts[1]
+    analyzed_span = dtldMsgsAndPartcpnts[2]
     comprsdDictFirst, comprsdDictSecnd = dict(), dict()
     firstPartMsgs, secndPartMsgs = [], []
     firstPartMdia, secndPartMdia = [], []
 
 
     for i in participantMessagesLists[0]:
-        if i['type'] in ["text", "placeholder"]:
+        if i['type'] == "text":
             firstPartMsgs.append(i["date"])
         else:
             firstPartMdia.append(i["date"])
@@ -55,7 +74,7 @@ def dailyPlot(dtldMsgsAndPartcpnts):
 
 
     for i in participantMessagesLists[1]:
-        if i['type'] in ["text", "placeholder"]:
+        if i['type'] in ["text"]:
             secndPartMsgs.append(i["date"])
         else:
             secndPartMdia.append(i["date"])
@@ -68,31 +87,17 @@ def dailyPlot(dtldMsgsAndPartcpnts):
         mediaDictSecnd[i] = secndPartMdia.count(i)
 
 
-
-
-    missing_keys = set(comprsdDictFirst.keys()) - set(comprsdDictSecnd.keys())
-    for k in missing_keys:
-        comprsdDictSecnd[k] = 0
-    
-    missing_keys = set(comprsdDictSecnd.keys()) - set(comprsdDictFirst.keys())
-    for k in missing_keys:
-        comprsdDictFirst[k] = 0
-
-    missing_keys = set(comprsdDictSecnd.keys()) - set(mediaDictFirst.keys())
-    for k in missing_keys:
-        mediaDictFirst[k] = 0
-
-    missing_keys = set(comprsdDictSecnd.keys()) - set(mediaDictSecnd.keys())
-    for k in missing_keys:
-        mediaDictSecnd[k] = 0
-    
-    missing_keys = set(mediaDictFirst.keys()) - set(comprsdDictFirst.keys())
-    for k in missing_keys:
-        comprsdDictFirst[k] = 0
-
-    missing_keys = set(mediaDictFirst.keys()) - set(comprsdDictSecnd.keys())
-    for k in missing_keys:
-        comprsdDictSecnd[k] = 0
+    for day in list(datetime_range(analyzed_span)):
+        if day not in comprsdDictFirst.keys():
+            comprsdDictFirst[day]=0
+        if day not in comprsdDictSecnd.keys():
+            comprsdDictSecnd[day]=0
+        if day not in mediaDictFirst.keys():
+            mediaDictFirst[day]=0
+        if day not in mediaDictSecnd.keys():
+            mediaDictSecnd[day]=0
+    comprsdDictFirst, comprsdDictSecnd = dict(sorted(comprsdDictFirst.items())), dict(sorted(comprsdDictSecnd.items()))
+    mediaDictFirst, mediaDictSecnd = dict(sorted(mediaDictFirst.items())), dict(sorted(mediaDictSecnd.items()))
 
 
     comprsdDictFirst = dict(sorted(comprsdDictFirst.items()))
@@ -117,33 +122,27 @@ def dailyPlot(dtldMsgsAndPartcpnts):
     
 
 
-
-
-    x = list(comprsdDictFirst.keys())
-    y = list(comprsdDictFirst.values())
-    d = list(mediaDictFirst.values())
-    l = list(mediaDictSecnd.values())
-    z = list(comprsdDictSecnd.values())
-    f = [sum(x) for x in zip(y, d)]
-    g = [sum(x) for x in zip(z, f)]
+    x_axis = list(comprsdDictFirst.keys())
+    y_st_axis_text = list(comprsdDictFirst.values())
+    y_st_axis_media = list(mediaDictFirst.values())
+    y_nd_axis_media = list(mediaDictSecnd.values())
+    y_nd_axis_text = list(comprsdDictSecnd.values())   
 
 
 
+    y = [sum(x) for x in zip(y_st_axis_text, y_st_axis_media)]
+    b = [sum(x) for x in zip(y, y_nd_axis_text)]
+    print(y)
+    print(y_st_axis_text)
 
-    print(z)
-    print(f)
-    ax.bar(x,y, label=participants[0], color='#58aff4', edgecolor="white")
-    ax.bar(x, d, bottom=y, edgecolor="white", color="#2898f1")
-    ax.bar(x,z, bottom=f, label=participants[1], color='#f49C58', edgecolor="white")
-    ax.bar(x, l, bottom=g, edgecolor="white", color="#f18028")
-
-
+    ax.bar(x_axis,y_st_axis_text, label=participants[0], color='#58aff4', edgecolor="white")
+    ax.bar(x_axis, y_st_axis_media, bottom=y_st_axis_text, edgecolor="white", color="#2898f1")
+    ax.bar(x_axis,y_nd_axis_text, bottom=y, label=participants[1], color='#f49C58', edgecolor="white")
+    ax.bar(x_axis, y_nd_axis_media, bottom=b, color="#45763a")
     
-    addlabels(x, y, [0 for i in range(len(y))])
-    addlabels(x, z, y)
+    addlabels(x_axis, y, [0 for i in range(len(y))])
+    addlabels(x_axis, y_nd_axis_text, y)
     
-
-
     ax.legend()
     plt.show()
-dailyPlot(load_and_filter_json(filedialog.askopenfilename()))
+dailyPlot(load_and_filter_json('C:/Users/S/Downloads/messages/Zuzanna Dębowska_4.json'))
